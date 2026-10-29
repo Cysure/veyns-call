@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Veyns Call</title>
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sim-banner" id="sim-banner" hidden>
+    SIMULATED PALM · development only, no biometric is read ·
+    <a id="device-link" target="_blank" rel="noopener">open my palm scanner</a>
+  </div>
+
+  <header class="top">
+    <div class="brand"><img src="favicon.svg" alt=""><span>Veyns Call</span></div>
+    <div class="pq-chip" title="Every call: ML-KEM-768 + X25519 key exchange, ML-DSA-65 identities, AES-256-GCM frames">Post-quantum · peer to peer</div>
+  </header>
+
+  <main id="app">
+    <!-- 1. Palm sign-in -->
+    <section class="view" id="view-signin" hidden>
+      <div class="hero">
+        <div class="palm-mark"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#palm"/></svg></div>
+        <h1>Only humans call here.</h1>
+        <p class="lede">Every call on Veyns Call starts and is answered with a palm scan. A bot or a deepfake can't do that, even if it has your device.</p>
+        <button class="btn primary" id="signin" type="button">Connect my palm</button>
+        <p class="err" id="signin-error"></p>
+      </div>
+    </section>
+
+    <!-- 2. Avatar, key, palm -->
+    <section class="view" id="view-create" hidden>
+      <div class="create">
+        <div class="avatar-studio">
+          <img class="avatar xl" id="avatar-preview" alt="Your avatar">
+          <div class="row">
+            <button class="btn ghost small" id="avatar-shuffle" type="button">New pattern</button>
+            <label class="btn ghost small">Use a photo<input type="file" id="avatar-file" accept="image/*" hidden></label>
+          </div>
+        </div>
+        <form id="create-form" class="stack">
+          <p class="eyebrow">Step 2 of 2</p>
+          <h1>Make your identity</h1>
+          <p class="lede">Pick a name and avatar. Your device generates a post-quantum key (ML-DSA-65), then your palm binds it to you. Nobody, including us, can make another one in your name without your palm.</p>
+          <label>Name<input name="name" maxlength="40" required autocomplete="nickname" placeholder="How contacts see you"></label>
+          <button class="btn primary" type="submit">Create key and scan palm</button>
+          <p class="err" id="create-error"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 3. Home -->
+    <section class="view" id="view-home" hidden>
+      <div class="home">
+        <aside class="me card">
+          <img class="avatar lg" id="me-avatar" alt="">
+          <div>
+            <h2 id="me-name"></h2>
+            <p class="mono" id="me-fp" title="Your ML-DSA-65 key fingerprint"></p>
+            <p class="badge ok">Palm-bound identity</p>
+          </div>
+        </aside>
+
+        <section class="card contacts">
+          <div class="card-head"><h3>Contacts</h3><span class="mute" id="contacts-count"></span></div>
+          <ul id="contacts" class="list"></ul>
+          <p class="empty" id="contacts-empty">No contacts yet. Invite someone, or join with their invite code.</p>
+        </section>
+
+        <section class="card invite">
+          <div class="card-head"><h3>Invite a human</h3></div>
+          <p class="mute">Each invite is signed by your palm, works once, and expires in 24 hours. Stay online until they use it.</p>
+          <button class="btn primary" id="invite-new" type="button">Create invite with my palm</button>
+          <ul id="invites" class="list"></ul>
+          <form id="redeem-form" class="redeem">
+            <label>Got an invite code?<input name="code" placeholder="vc1.…" autocomplete="off" spellcheck="false"></label>
+            <button class="btn ghost" type="submit">Join</button>
+          </form>
+          <p class="mute small" id="redeeming" hidden>Looking for your inviter on the network… <button class="link" id="redeem-cancel" type="button">stop</button></p>
+          <p class="err" id="invite-error"></p>
+        </section>
+
+        <section class="card log">
+          <div class="card-head"><h3>Security log</h3></div>
+          <ul id="events" class="events"></ul>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <!-- Palm scan sheet -->
+  <div class="sheet" id="scan-sheet" hidden>
+    <div class="sheet-card">
+      <div class="scanner"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#palm"/></svg><span class="beam"></span></div>
+      <p class="eyebrow" id="scan-purpose">Palm scan</p>
+      <h2 id="scan-statement"></h2>
+      <p class="mute" id="scan-status">Put your palm on your Veyns scanner.</p>
+      <div class="row center">
+        <a class="btn primary" id="scan-open" target="_blank" rel="noopener" hidden>Open scanner</a>
+        <button class="btn ghost" id="scan-cancel" type="button">Cancel</button>
+      </div>
+      <p class="fine">Veyns only sees this generic wording and a hash. It never learns who you are calling.</p>
+    </div>
+  </div>
+
+  <!-- Call -->
+  <div class="call" id="call" hidden>
+    <video id="remote" playsinline autoplay></video>
+    <video id="local" playsinline autoplay muted></video>
+    <div class="call-peer">
+      <img class="avatar xl" id="call-avatar" alt="">
+      <h2 id="call-name"></h2>
+      <p id="call-state"></p>
+      <p class="mono small" id="call-fp"></p>
+    </div>
+    <div class="call-proofs" id="call-proofs"></div>
+    <div class="call-bar">
+      <button class="btn primary" id="call-answer" type="button" hidden>Answer with palm</button>
+      <button class="btn ghost" id="call-presence" type="button" hidden title="Ask them to scan their palm again">Verify it's them</button>
+      <button class="btn danger" id="call-end" type="button">End</button>
+    </div>
+    <p class="call-note" id="call-note"></p>
+  </div>
+
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="palm" viewBox="0 0 120 120">
+      <path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"
+        d="M40 104c-12-10-20-24-20-38V46a7 7 0 0 1 14 0v16M34 58V24a7 7 0 0 1 14 0v34M48 56V16a7 7 0 0 1 14 0v40M62 56V22a7 7 0 0 1 14 0v40M76 62V40a7 7 0 0 1 14 0v34c0 18-12 32-30 32H52"/>
+      <path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".55"
+        d="M44 92c6-8 8-16 6-24M56 96c4-10 6-20 4-30M68 94c2-8 2-16 0-22M48 76c8 2 16 0 22-6"/>
+    </symbol>
+  </svg>
+  <script src="app.js" type="module"></script>
+</body>
+</html>

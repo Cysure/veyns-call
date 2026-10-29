@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "veyns-call-alice", "runtimeExecutable": "node", "runtimeArgs": ["scripts/dev.js"], "port": 7101 }
+  ]
+}

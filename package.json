@@ -1,0 +1,22 @@
+{
+  "name": "veyns-call",
+  "version": "0.1.0",
+  "description": "Peer-to-peer, post-quantum calls that only palm-verified humans can place or answer.",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "start": "node server.js",
+    "test": "node --test --test-concurrency=1 \"test/*.test.js\""
+  },
+  "type": "module",
+  "dependencies": {
+    "@noble/curves": "^2.4.0",
+    "@noble/post-quantum": "^0.7.1",
+    "hyperdht": "^6.35.0",
+    "hyperswarm": "^4.17.2",
+    "ws": "^8.22.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  }
+}
