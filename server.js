@@ -1,4 +1,4 @@
-// One real Veyns Call node on the public Hyperswarm DHT, palm scans from real Veyns.
+// One real Veyns Call node on the public Hyperswarm DHT, palm scans from real Veyns via the relay.
 import fs from 'node:fs';
 import { startNode } from './src/node.js';
 
@@ -11,8 +11,12 @@ if (fs.existsSync('.env')) {
   }
 }
 const issuer = (env.VEYNS_ISSUER || 'https://sandbox.id.veyns.io').replace(/\/$/, '');
-if (!env.VEYNS_CLIENT_ID) {
-  console.error('Set VEYNS_CLIENT_ID (and VEYNS_BACKEND_SECRET) in .env. For a local demo run `npm run dev`.');
+// The client ID is the node's trust anchor: palm proofs must be issued for exactly this app.
+// It is pinned here, never fetched from the relay, so a hostile relay cannot change whom we trust.
+const clientId = env.VEYNS_CLIENT_ID;
+const relay = env.VEYNS_CALL_RELAY;
+if (!clientId || (!relay && !env.VEYNS_BACKEND_SECRET)) {
+  console.error('Set VEYNS_CLIENT_ID and VEYNS_CALL_RELAY in .env (see .env.example). For a local demo run `npm run dev`.');
   process.exit(1);
 }
 await startNode({
@@ -20,7 +24,8 @@ await startNode({
   port: Number(env.VEYNS_CALL_PORT || 7100),
   dataDir: env.VEYNS_CALL_DATA || 'data/me',
   issuer,
-  clientId: env.VEYNS_CLIENT_ID,
-  backendSecret: env.VEYNS_BACKEND_SECRET,
+  clientId,
+  relay,
+  backendSecret: relay ? undefined : env.VEYNS_BACKEND_SECRET,
   log: console.log,
 });

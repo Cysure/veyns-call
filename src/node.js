@@ -8,6 +8,7 @@ import { WebSocketServer } from 'ws';
 import { Channel } from './channel.js';
 import { newIdentityKeys, identityId, fingerprint, sign, verify, sha256, randomId, b64, unb64 } from './pq.js';
 import { createPalmVerifier, createPalmRequester, humanOf, HttpError } from './palm.js';
+import { createRelayRequester } from './relay.js';
 import { enrollAction, makeCard, verifyCard, cardView, checkProfile } from './identity.js';
 import { inviteAction, callAction, answerAction, presenceAction, CALL_SCAN_SECONDS, PRESENCE_SECONDS } from './actions.js';
 
@@ -37,7 +38,7 @@ const inviteMac = (secret, transcriptHash) => crypto.createHmac('sha256', secret
 export async function startNode(options) {
   const {
     name = 'node', port = 7101, dataDir = `data/${name}`,
-    issuer, clientId, backendSecret, simulated = false, bootstrap, fetchImpl = fetch, log = () => {},
+    issuer, clientId, backendSecret, relay, simulated = false, bootstrap, fetchImpl = fetch, log = () => {},
   } = options;
 
   fs.mkdirSync(dataDir, { recursive: true });
@@ -50,7 +51,10 @@ export async function startNode(options) {
   };
 
   const verifier = createPalmVerifier({ trusted: new Map([[issuer, clientId]]), fetchImpl });
-  const requester = createPalmRequester({ issuer, clientId, backendSecret, fetchImpl });
+  // With a relay, the Veyns backend secret stays on the relay; the node only verifies.
+  const requester = relay
+    ? createRelayRequester({ relay: relay.replace(/\/$/, ''), fetchImpl })
+    : createPalmRequester({ issuer, clientId, backendSecret, fetchImpl });
   const myId = () => store.keys && identityId(store.keys.sigPub);
 
   /* ------------------------------------------------------------ events */
@@ -452,7 +456,7 @@ export async function startNode(options) {
     const me = store.card ? cardView(store.card) : null;
     return {
       name,
-      config: { issuer, clientId, simulated, palmReady: requester.enabled },
+      config: { issuer, clientId, simulated, palmReady: requester.enabled, signinUrl: relay ? `${relay.replace(/\/$/, '')}/signin.html` : null },
       stage: !store.human ? 'signin' : !store.card ? 'create' : 'ready',
       human: store.human,
       device: simulated && store.human ? `${issuer}/device/${store.human}` : null,

@@ -279,6 +279,12 @@ function loadSdk() {
 $('signin').addEventListener('click', async () => {
   $('signin-error').textContent = '';
   try {
+    if (state.config.signinUrl) {
+      // Real Veyns: the ceremony runs on the relay's registered origin and comes back here with the token.
+      const { nonce } = await api('/api/onboard/start', {});
+      location.href = `${state.config.signinUrl}?nonce=${encodeURIComponent(nonce)}&return=${encodeURIComponent(location.origin + '/')}`;
+      return;
+    }
     const [{ nonce }] = await Promise.all([api('/api/onboard/start', {}), loadSdk()]);
     const { token } = await window.veyns.signin({ clientId: state.config.clientId, nonce, method: 'palm' });
     render(await api('/api/onboard/signin', { token }));
@@ -328,5 +334,20 @@ $('call-end').addEventListener('click', () => {
   api(c.direction === 'in' && c.state === 'incoming' ? '/api/calls/decline' : '/api/calls/hangup', { id: c.id });
 });
 
-api('/api/state').then(render);
-connect();
+async function boot() {
+  // Back from the relay's Veyns sign-in page: the token is in the fragment, which no server saw.
+  const token = new URLSearchParams(location.hash.slice(1)).get('veyns_token');
+  if (token) {
+    history.replaceState(null, '', location.pathname);
+    try {
+      await api('/api/onboard/signin', { token });
+    } catch (error) {
+      render(await api('/api/state'));
+      $('signin-error').textContent = error.message;
+      return connect();
+    }
+  }
+  render(await api('/api/state'));
+  connect();
+}
+boot();

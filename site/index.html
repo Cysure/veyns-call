@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Veyns Call</title>
+  <meta name="description" content="Peer-to-peer, post-quantum calls that only palm-verified humans can place or answer.">
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><img src="favicon.svg" alt=""><span>Veyns Call</span></div>
+    <div class="pq-chip">Post-quantum · peer to peer</div>
+  </header>
+  <main>
+    <div class="hero">
+      <h1>Only humans call here.</h1>
+      <p class="lede">Veyns Call runs on your own device and connects directly to the people you call. Every call is started and answered with a palm scan, so a bot or a deepfake can't place one.</p>
+      <div class="card" style="text-align:left;max-width:560px;display:grid;gap:10px">
+        <h3>This server is only the palm relay</h3>
+        <p class="mute">It asks Veyns to show a palm request on your scanner and hands back Veyns' signed answer, which your device checks itself. Calls, keys and media never touch it.</p>
+        <p class="mute small" id="status">Checking relay…</p>
+      </div>
+    </div>
+  </main>
+  <script src="status.js"></script>
+</body>
+</html>
